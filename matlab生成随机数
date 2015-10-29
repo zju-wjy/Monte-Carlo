@@ -1,0 +1,56 @@
+matlab生成随机数
+matlab生成随机数主要有三个函数：rand，randn，randi
+rand 生成随机分布的伪随机数。分布在（0~1）之间
+	主要语法：rand(m,n)生成m行n列的均匀分布的伪随机数
+			  rand(m,n,'double')生成指定精度的均匀分布的伪随机数，参数还可以是'single'
+			  rand(RandStream,m,n)利用指定的RandStream(类似于随机种子)生成伪随机数
+randn 生成标准正态分布的伪随机数(均值为0，方差为1)
+	主要语法：同上
+randi 生成均匀分布的伪随机数
+	主要语法：randi(iMax)在开区间(0,iMax)生成均匀分布的伪随机整数
+			  randi(iMax,m,n)在开区间(0,iMax)生成mXn型随机矩阵
+			  r = randi([iMin,iMax],m,n)在开区间(iMin,iMax)生成mXn型随机矩阵
+关于随机种子，伪随机数的重复生成
+正常情况下每次调用相同指令例如rand生成的伪随机数是不同的，
+例如：
+rand(1,3)
+rand(1,3)
+matlab的输出为:
+ans =
+   0.139043482536049   0.734007633362635   0.194791464843949
+ans =
+   0.602204766324215   0.937923745019422   0.149285414707192
+如何使两个语句生成的随机数相等呢？
+Matlab帮助中的下面章节有所叙述：
+Managing the Default Stream
+管理默认（缺省）流
+ 
+rand, randn, and randi draw random numbers from an underlying random number stream, called the default stream. The @RandStream class allows you to get a handle to the default stream and control random number generation.
+rand,randn,和randi 从一个基础的随机数流中得到随机数，叫做默认流。你可以通过 @RandStream 类得到默认流的句柄从而控制随机数的生成。
+Get a handle to the default stream as follows:
+以下为得到默认流句柄的代码：
+defaultStream=RandStream.getDefaultStream defaultStream = mt19937ar random stream (current default) Seed: 0 RandnAlg: Ziggurat
+
+Return the properties of the stream object with the get method:
+用get方法返回流对象属性：
+get(defaultStream) Type: 'mt19937ar' NumStreams: 1 StreamIndex: 1 Substream: 1 Seed: 0 State: [625x1 uint32] RandnAlg: 'Ziggurat' Antithetic: 0 FullPrecision: 1
+
+The State property is the internal state of the generator. You can save the State of defaultStream.
+state属性是发生器的内部状态，你可以保存默认流的状态：
+myState=defaultStream.State;
+
+Using myState, you can restore the state of defaultStream and reproduce previous results.
+利用myState你可以恢复默认流状态重新生成前面的结果：
+myState=defaultStream.State; A=rand(1,100); defaultStream.State=myState; B=rand(1,100); isequal(A,B) ans = 1
+你也可以直接使用@RandStream 类的reset静态方法重置种子状态来获取相同的随机生成序列，下面是示例代码:
+stream = RandStream.getDefaultStream;%获取默认的随机种子（暂时这么叫，帮助有详细解释）
+reset(stream);%重置
+rand(stream,1,3)
+reset(stream);%重置
+rand(stream,1,3)
+matlab的输出为：
+ans =
+   0.814723686393179   0.905791937075619   0.126986816293506
+ans =
+   0.814723686393179   0.905791937075619   0.126986816293506
+可以看出生成的随机码是相等的，这样可以用于重复实验上来
